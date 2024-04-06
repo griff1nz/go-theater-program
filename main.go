@@ -28,7 +28,7 @@ func createCustomers() []Customer { //Creates customers from user input
 	customerArr := []Customer{}
 	for {
 		var name string
-		var height uint
+		var height int
 		// var done string
 		fmt.Println("Enter the customer's full name:")
 		scanner := bufio.NewScanner(os.Stdin)
@@ -43,7 +43,6 @@ func createCustomers() []Customer { //Creates customers from user input
 		}
 
 		var newCustomer = Customer{name, height}
-		fmt.Println(newCustomer)
 		customerArr = append(customerArr, newCustomer)
 		fmt.Printf("The customer's name is %v and they are %v inches tall.", name, height)
 		reader := bufio.NewReader(os.Stdin)
@@ -97,24 +96,25 @@ func randomizeSeats() { //Randomly assigns the customers to seats in the theater
 func printTheater() { //Prints the theater as an organized table
 	for _, row := range theater {
 		for _, value := range row {
-			// Print each value with padding
-			fmt.Print(value) // Adjust padding as needed
+
+			fmt.Print(value)
 		}
 		fmt.Println() // Move to the next row
 	}
 }
 
-func isSeatOccupied(row int, col int) { //Tells if the seat is occupied or not
-	if theater[row][col].Height == 0 { //Height will only equal zero if a customer is not assigned
-		fmt.Println("This seat is available")
+func isSeatOccupied(row int, col int) bool { //Tells if the seat is occupied or not
+	if theater[row-1][col-1].Height == 0 { //Height will only equal zero if a customer is not assigned
+		return false
 	} else {
-		fmt.Println("This seat is occupied")
+		return true
 	}
 }
 
-func findMostOccupiedRow() { //Gets the most occupied row
+func findMostOccupiedRow() int { //Gets the most occupied row, 1 to 6
 	var currentRowOccupancy int
 	var maxRowOccupancy int
+	var highestRow int
 	for row := 0; row < 6; row++ {
 		for col := 0; col < 10; col++ {
 			if theater[row][col].Height != 0 {
@@ -123,12 +123,13 @@ func findMostOccupiedRow() { //Gets the most occupied row
 		}
 		if currentRowOccupancy > maxRowOccupancy {
 			maxRowOccupancy = currentRowOccupancy
+			highestRow = row + 1
 		}
 	}
-	fmt.Println("The most occupied row is", maxRowOccupancy)
+	return highestRow
 }
 
-func getTallestCustomer() { //Gets the tallest customer in the theater
+func getTallestCustomer() string { //Gets the tallest customer in the theater
 	var tallest Customer
 	for row := 0; row < 6; row++ {
 		for col := 0; col < 10; col++ {
@@ -137,7 +138,7 @@ func getTallestCustomer() { //Gets the tallest customer in the theater
 			}
 		}
 	}
-	fmt.Println("The tallest customer in the theater is", tallest.Name)
+	return tallest.Name
 }
 
 func getCustomersToBeMoved() []Customer { //Returns customers that need to be moved due to someone more than 3 inches taller than them being seated in front of them
@@ -152,6 +153,49 @@ func getCustomersToBeMoved() []Customer { //Returns customers that need to be mo
 	return customersToBeMoved
 }
 
-func reserveTwoSeats() {
-	fmt.Println("Not implemented yet")
+func reserveTwoSeats() { //Finds two seats in the theater and reserves seats for them
+	var twoCustomers []Customer
+	if len(customers) > 58 {
+		fmt.Println("There are less than two seats available.")
+		return
+	}
+	fmt.Println("Let's add two customers.")
+	for i := 0; i < 2; i++ {
+		var name string
+		var height int
+		fmt.Println("Enter the customer's full name:")
+		scanner := bufio.NewScanner(os.Stdin)
+		if scanner.Scan() {
+			name = scanner.Text()
+		}
+		fmt.Println("Enter the customer's height in inches:")
+		fmt.Scan(&height)
+		for height < 1 {
+			fmt.Println("Invalid height; enter a number greater than 1.")
+			fmt.Scan(&height)
+		}
+
+		var newCustomer = Customer{name, height}
+		twoCustomers = append(twoCustomers, newCustomer)
+		customers = append(customers, twoCustomers...)
+		reader := bufio.NewReader(os.Stdin)
+		reader.ReadString('\n') //absorbs whitespace that is there
+	}
+	var check int
+outerLoop:
+	for row := 0; row < 6; row++ {
+		for col := 0; col < 9; col++ { //Only need to check the first 9 seats
+			if theater[row][col].Height == 0 && theater[row][col+1].Height == 0 {
+				theater[row][col] = twoCustomers[0]
+				theater[row][col+1] = twoCustomers[1]
+				fmt.Println("Seats have been reserved.")
+				printTheater()
+				check = 1
+				break outerLoop
+			}
+		}
+	}
+	if check != 1 {
+		fmt.Println("Unable to find seats.")
+	}
 }
