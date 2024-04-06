@@ -3,14 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 )
 
 var theater = [6][10]Customer{}
+var customers = []Customer{}
 
-func theaterBuilder() {
-	customers := createCustomers()
+func theaterBuilder() { //Assigns customers in row-major order by default
+	customers = createCustomers()
 	for row := 0; row < 6; row++ {
 		for col := 0; col < 10; col++ {
 			customerIndex := col + (row * 10)
@@ -22,7 +24,7 @@ func theaterBuilder() {
 	printTheater()
 }
 
-func createCustomers() []Customer {
+func createCustomers() []Customer { //Creates customers from user input
 	customerArr := []Customer{}
 	for {
 		var name string
@@ -72,20 +74,84 @@ func createCustomers() []Customer {
 	}
 }
 
-func printTheater() {
-	for _, row := range theater {
-        for _, value := range row {
-            // Print each value with padding
-            fmt.Print(value) // Adjust padding as needed
-        }
-        fmt.Println() // Move to the next row
-    }
+func randomizeSeats() { //Randomly assigns the customers to seats in the theater
+	for row := 0; row < 6; row++ {
+		for col := 0; col < 10; col++ {
+			theater[row][col].Height = 0
+			theater[row][col].Name = "" //Initialize theater
+		}
+	}
+	for i := 0; i < len(customers); {
+		row := rand.Intn(6)
+		col := rand.Intn(10)
+		if theater[row][col].Height == 0 {
+			theater[row][col] = customers[i]
+			i++
+		} else {
+			continue
+		}
+	}
+	printTheater()
 }
 
-func isSeatOccupied(row int, col int) bool {
-	if theater[row][col].Height == 0 { //Height will only equal zero if a customer is not assigned
-		return false
-	} else {
-		return true
+func printTheater() { //Prints the theater as an organized table
+	for _, row := range theater {
+		for _, value := range row {
+			// Print each value with padding
+			fmt.Print(value) // Adjust padding as needed
+		}
+		fmt.Println() // Move to the next row
 	}
+}
+
+func isSeatOccupied(row int, col int) { //Tells if the seat is occupied or not
+	if theater[row][col].Height == 0 { //Height will only equal zero if a customer is not assigned
+		fmt.Println("This seat is available")
+	} else {
+		fmt.Println("This seat is occupied")
+	}
+}
+
+func findMostOccupiedRow() { //Gets the most occupied row
+	var currentRowOccupancy int
+	var maxRowOccupancy int
+	for row := 0; row < 6; row++ {
+		for col := 0; col < 10; col++ {
+			if theater[row][col].Height != 0 {
+				currentRowOccupancy++
+			}
+		}
+		if currentRowOccupancy > maxRowOccupancy {
+			maxRowOccupancy = currentRowOccupancy
+		}
+	}
+	fmt.Println("The most occupied row is", maxRowOccupancy)
+}
+
+func getTallestCustomer() { //Gets the tallest customer in the theater
+	var tallest Customer
+	for row := 0; row < 6; row++ {
+		for col := 0; col < 10; col++ {
+			if theater[row][col].Height > tallest.Height {
+				tallest = theater[row][col]
+			}
+		}
+	}
+	fmt.Println("The tallest customer in the theater is", tallest.Name)
+}
+
+func getCustomersToBeMoved() []Customer { //Returns customers that need to be moved due to someone more than 3 inches taller than them being seated in front of them
+	var customersToBeMoved []Customer
+	for row := 1; row < 6; row++ { //Only need to do rows 1-5 because nobody is in front of row 0
+		for col := 0; col < 10; col++ {
+			if theater[row-1][col].Height-3 > theater[row][col].Height {
+				customersToBeMoved = append(customersToBeMoved, theater[row][col])
+			}
+		}
+	}
+	return customersToBeMoved
+}
+
+func reserveTwoSeats() {
+	fmt.Println("Not implemented yet")
 }
